@@ -44,6 +44,9 @@ class RcloneClient:
         except Exception as exc:
             raise RuntimeError("rclone is not installed on this system or not on PATH. Please install it from here: https://rclone.org/") from exc
 
+        logfile = Path("log/rclone.log")
+        logfile.parent.mkdir(parents=True, exist_ok=True)
+
         self.__process = subprocess.Popen(
             [
                 str(self.__rclone_bin),
@@ -57,7 +60,7 @@ class RcloneClient:
                 # The connections could be limited, but it could cause deadlocks, so it's preferred to change transfers/checkers only
                 f"--transfers={self.__transfers}",
                 f"--checkers={self.__checkers}",
-                "--log-file=log/rclone.log",
+                f"--log-file={logfile}",
                 f"--log-level={self.__log_level}",
                 *([f"--bwlimit={self.__bwlimit}"] if self.__bwlimit else []),
             ]
