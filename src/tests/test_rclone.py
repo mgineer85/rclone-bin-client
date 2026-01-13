@@ -7,8 +7,8 @@ from uuid import uuid4
 
 import pytest
 
-from rclone_client.client import RcloneClient
-from rclone_client.exceptions import RcloneProcessException
+from rclone_bin_client.client import RcloneClient
+from rclone_bin_client.exceptions import RcloneProcessException
 
 logger = logging.getLogger(name=None)
 

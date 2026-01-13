@@ -1,6 +1,6 @@
 import time
 
-from rclone_client.client import RcloneClient
+from rclone_bin_client.client import RcloneClient
 
 if __name__ == "__main__":
     rc = RcloneClient()

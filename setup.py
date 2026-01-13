@@ -131,14 +131,14 @@ class BuildWithRclone(build_py):
         # 2. Determine where to place the binary inside the wheel
         if self.editable_mode:
             print("editable installation!")
-            pkg_dir = pathlib.Path("src/rclone_client/bin")
+            pkg_dir = pathlib.Path("src/rclone_bin_client/bin")
 
             bin_name = "rclone.exe" if platform.system() == "Windows" else "rclone"
             if pkg_dir.joinpath(bin_name).exists():
                 print("not downloading rclone as it already exists.")
                 return
         else:
-            pkg_dir = pathlib.Path(self.build_lib) / "rclone_client" / "bin"
+            pkg_dir = pathlib.Path(self.build_lib) / "rclone_bin_client/bin"
 
         print(pkg_dir)
         print()
