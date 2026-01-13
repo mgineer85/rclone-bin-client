@@ -18,28 +18,23 @@ classifiers = [
 keywords = ["rclone"]
 
 
-dependencies = ["niquests"]
+dependencies = []
 
 
-# [project.urls]
-# homepage = "https://photobooth-app.org/wigglegramcamera/"
-# repository = "https://github.com/photobooth-app/wigglecam"
-# documentation = "https://photobooth-app.org/wigglegramcamera/"
-
-# [project.scripts]
-# wigglecam-demohub = "examples.demohub:run_async"
-# wigglecam-node = "wigglecam.__main__:main"
+[project.urls]
+homepage = "https://github.com/mgineer85/rclone-bin-client"
+repository = "https://github.com/mgineer85/rclone-bin-client"
 
 [dependency-groups]
 dev = [
-  "requests",
   "ruff",
   "pytest",
   "pytest-cov",
   "coverage[toml]",
   "pyright",
   "poethepoet",
-  "hatch",
+  "setuptools",
+  "wheel",
 ]
 
 

@@ -1,10 +1,10 @@
 import json
 import subprocess
 import time
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Any
-
-import niquests as requests
 
 from . import BINARY_PATH
 from .dto import AsyncJobResponse, ConfigListremotes, CoreStats, CoreVersion, JobList, JobStatus, LsJsonEntry, PubliclinkResponse
@@ -29,7 +29,7 @@ class RcloneClient:
         self.__bwlimit = bwlimit
         self.__connect_addr = f"http://{bind}"
         self.__process = None
-        self.__rclone_bin: Path | None = None
+        self.__rclone_bin = BINARY_PATH
 
     # -------------------------
     # Lifecycle
@@ -38,12 +38,6 @@ class RcloneClient:
         if self.__process:
             return
 
-        try:
-            if not self.__rclone_bin:
-                self.__rclone_bin = BINARY_PATH
-        except Exception as exc:
-            raise RuntimeError("rclone is not installed on this system or not on PATH. Please install it from here: https://rclone.org/") from exc
-
         logfile = Path("log/rclone.log")
         logfile.parent.mkdir(parents=True, exist_ok=True)
 
@@ -51,9 +45,8 @@ class RcloneClient:
             [
                 str(self.__rclone_bin),
                 "rcd",
-                # web-gui is always on, as the api is accessible anyways so there is no reason to disable gui "for security"
                 f"--rc-addr={self.__bind_addr}",
-                "--rc-no-auth",
+                "--rc-no-auth",  # TODO: add auth.
                 *(["--rc-web-gui"] if self.__enable_webui else []),
                 "--rc-web-gui-no-open-browser",
                 # The server needs to accept at least transfers+checkers connections, otherwise sync might fail!
@@ -89,28 +82,27 @@ class RcloneClient:
         assert not (not fs.endswith(":") and not Path(fs).is_absolute()), f"fs must be absolute when remote is a local path: {fs=} {remote=}"
 
     def _post(self, endpoint: str, data: dict[str, Any] | None = None):
+        req = urllib.request.Request(
+            url=f"{self.__connect_addr}/{endpoint}",
+            data=json.dumps(data or {}).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+
         try:
-            resp = requests.post(
-                f"{self.__connect_addr}/{endpoint}",
-                data=json.dumps(data or {}),
-                headers={"Content-Type": "application/json"},
-                # add header to ensure compat with rclone 1.60 (debian apt).
-                # It fails using content type "application/json;charset=utf-8" which is niquests default
-                # could revert to json=data in future when more recent rclone is used
-                timeout=(20, 20),  # note: ConnectTimeout, ReadTimeout
-                retries=0,
-            )
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                raw: bytes = resp.read()
+                response_json = json.loads(raw.decode("utf-8"))
 
-        except requests.exceptions.RequestException as exc:
-            # rclone daemon not running / wrong port / refused connection / timeout, ...
+        except urllib.error.HTTPError as exc:  # non 200 HTTP codes
+            raw: bytes = exc.read()
+            response_json = json.loads(raw.decode("utf-8"))
+            raise RcloneProcessException.from_dict(response_json) from exc
+        except Exception as exc:  # all other errors
+            print(exc)
             raise RcloneConnectionException(f"Issue connecting to rclone RC server, error: {exc}") from exc
-
-        response_json = resp.json()
-
-        if not resp.ok:
-            raise RcloneProcessException.from_dict(response_json)
-
-        return response_json
+        else:
+            return response_json
 
     def _noopauth(self, input: dict):
         return self._post("rc/noopauth", input)
