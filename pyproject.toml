@@ -2,7 +2,7 @@
 [project]
 name = "rclone-bin-client"
 description = "Rclone client including the binaries."
-version = "0.0.1"
+version = "1.0.0"
 authors = [{ name = "Michael G", email = "me@mgineer85.de" }]
 maintainers = [{ name = "Michael G", email = "me@mgineer85.de" }]
 requires-python = ">=3.11"
