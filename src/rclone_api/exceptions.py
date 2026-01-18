@@ -20,3 +20,6 @@ class RcloneProcessException(Exception):
 
     def __str__(self):
         return f"RcloneProcessException(status={self.status}, path='{self.path}', error='{self.error}', input={self.input})"
+
+
+class RclonePublicLinkNotSupportedException(Exception): ...

@@ -11,7 +11,7 @@ from typing import Any, Literal
 
 from . import BINARY_PATH
 from .dto import AsyncJobResponse, ConfigListremotes, CoreStats, CoreVersion, JobList, JobStatus, LsJsonEntry, PubliclinkResponse
-from .exceptions import RcloneConnectionException, RcloneProcessException
+from .exceptions import RcloneConnectionException, RcloneProcessException, RclonePublicLinkNotSupportedException
 
 
 class RcloneApi:
@@ -193,7 +193,15 @@ class RcloneApi:
     def publiclink(self, fs: str, remote: str, unlink: bool = False, expire: str | None = None) -> PubliclinkResponse:
         self._valid_fs_remote(fs, remote)
         result = self._post("operations/publiclink", {"fs": fs, "remote": remote, "unlink": unlink, **({"expire": expire} if expire else {})})
-        return PubliclinkResponse.from_dict(result)
+
+        try:
+            publiclink = PubliclinkResponse.from_dict(result)
+        except KeyError:
+            raise RclonePublicLinkNotSupportedException(
+                f"public link generation failed for remote {fs}{remote}. Maybe the remote doesn't support links."
+            ) from None
+        else:
+            return publiclink
 
     def ls(self, fs: str, remote: str) -> list[LsJsonEntry]:
         self._valid_fs_remote(fs, remote)
