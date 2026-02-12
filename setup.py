@@ -11,7 +11,7 @@ from setuptools import setup
 from setuptools.command.build_py import build_py
 from wheel.bdist_wheel import bdist_wheel
 
-rclone_version = os.environ.get("RCLONE_VERSION", "1.72.1")
+rclone_version = os.environ.get("RCLONE_VERSION", "1.73.0")
 rclone_build_platform = os.environ.get("RCLONE_BUILD_PLATFORM", None)
 
 PLATFORMS = {
