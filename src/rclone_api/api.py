@@ -24,6 +24,7 @@ class RcloneApi:
         checkers: int = 4,
         enable_webui: bool = False,
         bwlimit: str | None = None,
+        config_file: Path | None = None,
     ):
         self.__bind_addr = bind
         self.__log_file = log_file
@@ -32,6 +33,8 @@ class RcloneApi:
         self.__checkers = checkers
         self.__enable_webui = enable_webui
         self.__bwlimit = bwlimit
+        self.__config_file = config_file
+
         self.__connect_addr = f"http://{bind}"
         self.__process = None
         self.__rclone_bin = BINARY_PATH
@@ -52,6 +55,7 @@ class RcloneApi:
             [
                 str(self.__rclone_bin),
                 "rcd",
+                *([f"--config={self.__config_file}"] if self.__config_file else []),
                 f"--rc-addr={self.__bind_addr}",
                 "--rc-no-auth",  # TODO: add auth.
                 *(["--rc-web-gui"] if self.__enable_webui else []),
