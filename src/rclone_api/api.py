@@ -125,6 +125,8 @@ class RcloneApi:
         assert not (not fs.endswith(":") and not Path(fs).is_absolute()), f"fs must be absolute when remote is a local path: {fs=} {remote=}"
 
     def _post(self, endpoint: str, data: dict[str, Any] | None = None):
+        TIMEOUT = 90
+
         req = urllib.request.Request(
             url=f"{self.__connect_addr}/{endpoint}",
             data=json.dumps(data or {}).encode("utf-8"),
@@ -133,7 +135,7 @@ class RcloneApi:
         )
 
         try:
-            with urllib.request.urlopen(req, timeout=20) as resp:
+            with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
                 raw: bytes = resp.read()
                 response_json = json.loads(raw.decode("utf-8"))
 
@@ -141,6 +143,8 @@ class RcloneApi:
             raw: bytes = exc.read()
             response_json = json.loads(raw.decode("utf-8"))
             raise RcloneProcessException.from_dict(response_json) from exc
+        except TimeoutError as exc:
+            raise RcloneConnectionException(f"Operation timed out after {TIMEOUT}s. To copy large files consider using _async methods.") from exc
         except Exception as exc:  # all other errors
             raise RcloneConnectionException(f"Issue connecting to rclone RC server, error: {exc}") from exc
         else:
